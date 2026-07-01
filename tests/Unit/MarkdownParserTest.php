@@ -94,6 +94,11 @@ it('preserves multi-paragraph section bodies', function () {
         ->toBe("First paragraph.\n\nSecond paragraph.");
 });
 
+it('throws when the document has no front-matter block at all', function () {
+    expect(fn () => (new MarkdownParser)->parse("# A title\n\n## Context\n\nBody without front-matter."))
+        ->toThrow(InvalidAdrData::class);
+});
+
 it('throws when the front-matter lacks a required attribute', function () {
     $raw = <<<'MD'
         ---

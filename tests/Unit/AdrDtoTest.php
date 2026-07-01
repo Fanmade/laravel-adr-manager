@@ -76,6 +76,34 @@ it('round-trips through toArray() with the date serialized to a string', functio
     expect(AdrDto::fromArray($payload)->toArray())->toBe($payload);
 });
 
+it('ignores non-array link collections and non-string entries', function () {
+    $dto = AdrDto::fromArray([
+        'id' => '1',
+        'title' => 'x',
+        'status' => 'proposed',
+        'backlinks' => 'not-an-array',
+        'supersedes' => ['0002', 123, ''],
+    ]);
+
+    expect($dto->backlinks)->toBe([])
+        ->and($dto->supersedes)->toBe(['0002']);
+});
+
+it('accepts Carbon and DateTimeInterface date inputs', function () {
+    $fromCarbon = AdrDto::fromArray([
+        'id' => '1', 'title' => 'x', 'status' => 'proposed',
+        'date' => Carbon::parse('2026-05-05'),
+    ]);
+
+    $fromNative = AdrDto::fromArray([
+        'id' => '1', 'title' => 'x', 'status' => 'proposed',
+        'date' => new DateTimeImmutable('2026-06-06'),
+    ]);
+
+    expect($fromCarbon->date->toDateString())->toBe('2026-05-05')
+        ->and($fromNative->date->toDateString())->toBe('2026-06-06');
+});
+
 it('exposes an immutable copy helper that leaves the original untouched', function () {
     $original = AdrDto::fromArray(['id' => '1', 'title' => 'x', 'status' => 'proposed']);
 

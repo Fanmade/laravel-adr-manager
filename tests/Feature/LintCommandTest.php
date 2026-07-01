@@ -60,6 +60,28 @@ it('fails when a file cannot be parsed into a valid record', function () {
     $this->artisan('adr:lint')->assertFailed();
 });
 
+it('passes when the records directory does not exist', function () {
+    config()->set('adr-manager.path', 'docs/nonexistent');
+
+    $this->artisan('adr:lint')->assertSuccessful();
+});
+
+it('fails when two files declare the same record id', function () {
+    app(AdrRepository::class)->save(record('0001', 'First'));
+    writeRawAdr('0001-duplicate.md', "---\nid: \"0001\"\ntitle: Duplicate\nstatus: accepted\ndate: 2026-01-01\n---\n\n## Context\n\nx\n");
+
+    $this->artisan('adr:lint')
+        ->expectsOutputToContain('Duplicate')
+        ->assertFailed();
+});
+
+it('treats a non-array status configuration as an empty allow-list', function () {
+    config()->set('adr-manager.statuses', 'nonsense');
+    app(AdrRepository::class)->save(record('0001', 'First', 'accepted'));
+
+    $this->artisan('adr:lint')->assertFailed();
+});
+
 it('reports the offending file path', function () {
     app(AdrRepository::class)->save(record('0001', 'First', 'nope'));
 

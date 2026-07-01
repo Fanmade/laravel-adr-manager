@@ -31,6 +31,23 @@ it('anchors a relative records directory to the application base path', function
     (new Filesystem)->deleteDirectory(base_path('docs'));
 });
 
+it('uses an absolute records path verbatim', function () {
+    $absolute = sys_get_temp_dir().'/adr-abs-'.uniqid();
+    config()->set('adr-manager.path', $absolute);
+    app()->forgetInstance(AdrRepository::class);
+
+    app(AdrRepository::class)->save(AdrDto::fromArray([
+        'id' => '0001',
+        'title' => 'Absolute',
+        'status' => 'proposed',
+        'date' => '2026-01-01',
+    ]));
+
+    expect(is_dir($absolute))->toBeTrue();
+
+    (new Filesystem)->deleteDirectory($absolute);
+});
+
 it('lets the host application swap the repository implementation wholesale', function () {
     $fake = new class implements AdrRepository
     {

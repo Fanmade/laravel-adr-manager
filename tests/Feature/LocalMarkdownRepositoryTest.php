@@ -30,6 +30,13 @@ it('returns null when a record does not exist', function () {
     expect(makeRepo(adrTestDir())->find('9999'))->toBeNull();
 });
 
+it('reads an empty set when the directory does not yet exist', function () {
+    $repo = makeRepo(sys_get_temp_dir().'/adr-manager-tests/missing-'.uniqid());
+
+    expect($repo->all())->toBeEmpty()
+        ->and($repo->getLatestSequence())->toBe(0);
+});
+
 it('lists every record ordered by ascending sequence', function () {
     $repo = makeRepo(adrTestDir());
     $repo->save(record('0003', 'Third'));
