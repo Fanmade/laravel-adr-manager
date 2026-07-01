@@ -11,9 +11,11 @@ use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
 use Fanmade\AdrManager\Services\AdrLinter;
 use Fanmade\AdrManager\Services\MarkdownGenerator;
 use Fanmade\AdrManager\Services\MarkdownParser;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 final class AdrManagerServiceProvider extends ServiceProvider
@@ -21,6 +23,8 @@ final class AdrManagerServiceProvider extends ServiceProvider
     private const string CONFIG_FILE = __DIR__.'/../config/adr-manager.php';
 
     private const string MIGRATIONS_DIR = __DIR__.'/../database/migrations';
+
+    private const string ROUTES_DIR = __DIR__.'/../routes';
 
     public function register(): void
     {
@@ -45,6 +49,8 @@ final class AdrManagerServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(self::MIGRATIONS_DIR);
+        $this->registerAuthorization();
+        $this->registerRoutes();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -60,6 +66,36 @@ final class AdrManagerServiceProvider extends ServiceProvider
                 LintCommand::class,
             ]);
         }
+    }
+
+    /**
+     * Define the default authorization gate: open in the local environment
+     * (when configured), denied everywhere else until the host application
+     * binds its own definition.
+     */
+    private function registerAuthorization(): void
+    {
+        $gate = $this->configString($this->app, 'adr-manager.authorization.gate', 'viewAdrManager');
+
+        if (Gate::has($gate)) {
+            return;
+        }
+
+        Gate::define($gate, function (?Authenticatable $user): bool {
+            $openLocally = (bool) config('adr-manager.authorization.open_locally', true);
+
+            return $openLocally && $this->app->environment('local');
+        });
+    }
+
+    private function registerRoutes(): void
+    {
+        if ((bool) config('adr-manager.routing.enabled', true) === false) {
+            return;
+        }
+
+        $this->loadRoutesFrom(self::ROUTES_DIR.'/web.php');
+        $this->loadRoutesFrom(self::ROUTES_DIR.'/api.php');
     }
 
     private function recordsDirectory(Application $app): string
