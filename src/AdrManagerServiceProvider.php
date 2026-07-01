@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Fanmade\AdrManager;
 
 use Fanmade\AdrManager\Console\Commands\ChangelogCommand;
+use Fanmade\AdrManager\Console\Commands\InstallCommand;
 use Fanmade\AdrManager\Console\Commands\LintCommand;
 use Fanmade\AdrManager\Console\Commands\SyncCommand;
+use Fanmade\AdrManager\Console\StackInstaller;
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
 use Fanmade\AdrManager\Services\AdrLinter;
@@ -45,6 +47,11 @@ final class AdrManagerServiceProvider extends ServiceProvider
             $this->recordsDirectory($app),
             $this->configStringList($app, 'adr-manager.statuses'),
         ));
+
+        $this->app->bind(StackInstaller::class, fn (Application $app): StackInstaller => new StackInstaller(
+            $app->make(Filesystem::class),
+            $this->stackManifest($app),
+        ));
     }
 
     public function boot(): void
@@ -66,6 +73,7 @@ final class AdrManagerServiceProvider extends ServiceProvider
                 SyncCommand::class,
                 LintCommand::class,
                 ChangelogCommand::class,
+                InstallCommand::class,
             ]);
         }
     }
@@ -98,6 +106,29 @@ final class AdrManagerServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom(self::ROUTES_DIR.'/web.php');
         $this->loadRoutesFrom(self::ROUTES_DIR.'/api.php');
+    }
+
+    /**
+     * @return array<string, list<array{0: string, 1: string}>>
+     */
+    private function stackManifest(Application $app): array
+    {
+        $stubs = __DIR__.'/../resources/stubs';
+
+        return [
+            'livewire' => [
+                [$stubs.'/livewire/AdrIndex.php.stub', $app->basePath('app/Livewire/Adr/AdrIndex.php')],
+                [$stubs.'/livewire/index.blade.php.stub', $app->resourcePath('views/vendor/adr-manager/adr-index.blade.php')],
+            ],
+            'vue' => [
+                [$stubs.'/vue/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
+                [$stubs.'/vue/Index.vue.stub', $app->resourcePath('js/Pages/Adr/Index.vue')],
+            ],
+            'react' => [
+                [$stubs.'/react/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
+                [$stubs.'/react/Index.tsx.stub', $app->resourcePath('js/Pages/Adr/Index.tsx')],
+            ],
+        ];
     }
 
     private function recordsDirectory(Application $app): string

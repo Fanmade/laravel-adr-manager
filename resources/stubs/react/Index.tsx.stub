@@ -1,0 +1,19 @@
+interface Adr {
+  id: string
+  title: string
+  status: string
+}
+
+export default function Index({ records }: { records: Adr[] }) {
+  return (
+    <ul className="space-y-2">
+      {records.map((adr) => (
+        <li key={adr.id} className="rounded border p-3">
+          <span className="text-xs text-gray-500">ADR-{adr.id}</span>
+          <span className="font-medium">{adr.title}</span>
+          <span className="ml-2 text-xs uppercase">{adr.status}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}

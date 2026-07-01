@@ -1,0 +1,18 @@
+<script setup>
+defineProps({
+  records: {
+    type: Array,
+    required: true,
+  },
+})
+</script>
+
+<template>
+  <ul class="space-y-2">
+    <li v-for="adr in records" :key="adr.id" class="rounded border p-3">
+      <span class="text-xs text-gray-500">ADR-{{ adr.id }}</span>
+      <span class="font-medium">{{ adr.title }}</span>
+      <span class="ml-2 text-xs uppercase">{{ adr.status }}</span>
+    </li>
+  </ul>
+</template>
