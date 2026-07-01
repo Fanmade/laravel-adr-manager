@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Fanmade\AdrManager;
 
+use Fanmade\AdrManager\Console\Commands\LintCommand;
 use Fanmade\AdrManager\Console\Commands\SyncCommand;
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
+use Fanmade\AdrManager\Services\AdrLinter;
 use Fanmade\AdrManager\Services\MarkdownGenerator;
 use Fanmade\AdrManager\Services\MarkdownParser;
 use Illuminate\Contracts\Config\Repository as Config;
@@ -24,20 +26,20 @@ final class AdrManagerServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(self::CONFIG_FILE, 'adr-manager');
 
-        $this->app->singleton(AdrRepository::class, function (Application $app): LocalMarkdownRepository {
-            $config = $app->make(Config::class);
+        $this->app->singleton(AdrRepository::class, fn (Application $app): LocalMarkdownRepository => new LocalMarkdownRepository(
+            $app->make(Filesystem::class),
+            $app->make(MarkdownParser::class),
+            $app->make(MarkdownGenerator::class),
+            $this->recordsDirectory($app),
+            $this->configString($app, 'adr-manager.filename_pattern', '{id}-{slug}.md'),
+        ));
 
-            $path = $config->get('adr-manager.path', 'docs/adrs');
-            $pattern = $config->get('adr-manager.filename_pattern', '{id}-{slug}.md');
-
-            return new LocalMarkdownRepository(
-                $app->make(Filesystem::class),
-                $app->make(MarkdownParser::class),
-                $app->make(MarkdownGenerator::class),
-                $this->resolveDirectory($app, is_string($path) ? $path : 'docs/adrs'),
-                is_string($pattern) ? $pattern : '{id}-{slug}.md',
-            );
-        });
+        $this->app->bind(AdrLinter::class, fn (Application $app): AdrLinter => new AdrLinter(
+            $app->make(Filesystem::class),
+            $app->make(MarkdownParser::class),
+            $this->recordsDirectory($app),
+            $this->configStringList($app, 'adr-manager.statuses'),
+        ));
     }
 
     public function boot(): void
@@ -55,20 +57,40 @@ final class AdrManagerServiceProvider extends ServiceProvider
 
             $this->commands([
                 SyncCommand::class,
+                LintCommand::class,
             ]);
         }
     }
 
-    /**
-     * Resolve a configured path to an absolute directory. Absolute paths are
-     * used verbatim; relative paths are anchored to the application base path.
-     */
-    private function resolveDirectory(Application $app, string $path): string
+    private function recordsDirectory(Application $app): string
     {
+        $path = $this->configString($app, 'adr-manager.path', 'docs/adrs');
+
         if (str_starts_with($path, '/') || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1) {
             return $path;
         }
 
         return $app->basePath($path);
+    }
+
+    private function configString(Application $app, string $key, string $default): string
+    {
+        $value = $app->make(Config::class)->get($key, $default);
+
+        return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function configStringList(Application $app, string $key): array
+    {
+        $value = $app->make(Config::class)->get($key, []);
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter($value, 'is_string'));
     }
 }
