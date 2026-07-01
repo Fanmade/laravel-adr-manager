@@ -20,4 +20,17 @@ abstract class TestCase extends Orchestra
             AdrManagerServiceProvider::class,
         ];
     }
+
+    /**
+     * @param  Application  $app
+     */
+    protected function defineEnvironment($app): void
+    {
+        $app['config']->set('database.default', 'testing');
+        $app['config']->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
+    }
 }

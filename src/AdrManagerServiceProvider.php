@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fanmade\AdrManager;
 
+use Fanmade\AdrManager\Console\Commands\SyncCommand;
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
 use Fanmade\AdrManager\Services\MarkdownGenerator;
@@ -16,6 +17,8 @@ use Illuminate\Support\ServiceProvider;
 final class AdrManagerServiceProvider extends ServiceProvider
 {
     private const string CONFIG_FILE = __DIR__.'/../config/adr-manager.php';
+
+    private const string MIGRATIONS_DIR = __DIR__.'/../database/migrations';
 
     public function register(): void
     {
@@ -39,10 +42,20 @@ final class AdrManagerServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadMigrationsFrom(self::MIGRATIONS_DIR);
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 self::CONFIG_FILE => $this->app->configPath('adr-manager.php'),
             ], 'adr-manager-config');
+
+            $this->publishes([
+                self::MIGRATIONS_DIR => $this->app->databasePath('migrations'),
+            ], 'adr-manager-migrations');
+
+            $this->commands([
+                SyncCommand::class,
+            ]);
         }
     }
 
