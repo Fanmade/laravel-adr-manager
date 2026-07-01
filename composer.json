@@ -1,0 +1,66 @@
+{
+    "name": "fanmade/laravel-adr-manager",
+    "description": "Git-first, file-based Architectural Decision Record (ADR) manager for Laravel.",
+    "keywords": [
+        "laravel",
+        "adr",
+        "architecture",
+        "decision-records",
+        "documentation"
+    ],
+    "homepage": "https://github.com/fanmade/laravel-adr-manager",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ben",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "illuminate/console": "^11.0 || ^12.0",
+        "illuminate/database": "^11.0 || ^12.0",
+        "illuminate/filesystem": "^11.0 || ^12.0",
+        "illuminate/support": "^11.0 || ^12.0",
+        "symfony/yaml": "^7.0"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^9.5 || ^10.0",
+        "pestphp/pest": "^3.5",
+        "pestphp/pest-plugin-laravel": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fanmade\\AdrManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fanmade\\AdrManager\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:coverage": "pest --coverage --min=100",
+        "lint": "pint",
+        "lint:test": "pint --test",
+        "stan": "phpstan analyse"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Fanmade\\AdrManager\\AdrManagerServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
