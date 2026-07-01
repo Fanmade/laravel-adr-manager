@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Fanmade\AdrManager\Http\Controllers\AdrController;
+use Fanmade\AdrManager\Http\Controllers\McpController;
 use Fanmade\AdrManager\Http\Middleware\Authorize;
 use Illuminate\Support\Facades\Route;
 
@@ -12,5 +13,6 @@ Route::group([
     'middleware' => [...(array) config('adr-manager.routing.api_middleware', ['api']), Authorize::class],
 ], function (): void {
     Route::get('/', [AdrController::class, 'index'])->name('adr-manager.api.index');
+    Route::post('/mcp', McpController::class)->name('adr-manager.mcp');
     Route::get('/{id}', [AdrController::class, 'show'])->name('adr-manager.api.show');
 });
