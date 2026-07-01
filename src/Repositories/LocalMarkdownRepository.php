@@ -111,6 +111,14 @@ final class LocalMarkdownRepository implements AdrRepository
 
     private function pathForId(string $id): ?string
     {
+        // The id becomes part of a glob pattern and is often attacker-supplied
+        // (route parameter, MCP argument). Reject anything but a plain
+        // identifier so it can neither traverse directories nor inject glob
+        // metacharacters.
+        if (preg_match('/^[A-Za-z0-9_-]+$/', $id) !== 1) {
+            return null;
+        }
+
         $first = $this->files->glob($this->directory.'/'.$id.'-*.md')[0] ?? null;
 
         return is_string($first) ? $first : null;

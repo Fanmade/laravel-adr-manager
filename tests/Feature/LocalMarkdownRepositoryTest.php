@@ -30,6 +30,21 @@ it('returns null when a record does not exist', function () {
     expect(makeRepo(adrTestDir())->find('9999'))->toBeNull();
 });
 
+it('refuses to look up ids containing path or glob metacharacters', function (string $maliciousId) {
+    $repo = makeRepo($dir = adrTestDir());
+    $repo->save(record('0001', 'First'));
+
+    expect($repo->find($maliciousId))->toBeNull()
+        // The legitimate record is still reachable.
+        ->and($repo->find('0001'))->not->toBeNull()
+        ->and(glob($dir.'/*.md'))->toHaveCount(1);
+})->with([
+    'parent traversal' => '../0001',
+    'glob wildcard' => '*',
+    'glob range' => '000[0-9]',
+    'nested path' => 'foo/0001',
+]);
+
 it('reads an empty set when the directory does not yet exist', function () {
     $repo = makeRepo(sys_get_temp_dir().'/adr-manager-tests/missing-'.uniqid());
 
