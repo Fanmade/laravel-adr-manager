@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fanmade\AdrManager;
 
+use Fanmade\AdrManager\Console\Commands\ChangelogCommand;
 use Fanmade\AdrManager\Console\Commands\LintCommand;
 use Fanmade\AdrManager\Console\Commands\SyncCommand;
 use Fanmade\AdrManager\Contracts\AdrRepository;
@@ -64,6 +65,7 @@ final class AdrManagerServiceProvider extends ServiceProvider
             $this->commands([
                 SyncCommand::class,
                 LintCommand::class,
+                ChangelogCommand::class,
             ]);
         }
     }
