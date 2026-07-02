@@ -7,6 +7,7 @@ namespace Fanmade\AdrManager\Mcp;
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Data\AdrDto;
 use stdClass;
+use Throwable;
 
 /**
  * Transport-agnostic Model Context Protocol server. It processes a single
@@ -43,6 +44,10 @@ final class McpServer
             $result = $this->dispatch($method, $params);
         } catch (McpException $e) {
             return $isNotification ? null : $this->error($id, $e->rpcCode, $e->getMessage());
+        } catch (Throwable) {
+            // Never leak an internal message (it may expose paths); map any
+            // unexpected failure to a spec-compliant internal error.
+            return $isNotification ? null : $this->error($id, -32603, 'Internal error');
         }
 
         return $isNotification ? null : $this->success($id, $result);

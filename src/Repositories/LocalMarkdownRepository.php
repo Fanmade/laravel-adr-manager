@@ -12,6 +12,7 @@ use Fanmade\AdrManager\Services\MarkdownParser;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Default file-based repository: ADRs live as Markdown files in a Git-tracked
@@ -85,6 +86,10 @@ final class LocalMarkdownRepository implements AdrRepository
      */
     public function supersede(string $targetId, string $newId): void
     {
+        if ($targetId === $newId) {
+            throw new InvalidArgumentException("An ADR cannot supersede itself [{$targetId}].");
+        }
+
         $target = $this->find($targetId) ?? throw AdrNotFound::withId($targetId);
         $new = $this->find($newId) ?? throw AdrNotFound::withId($newId);
 

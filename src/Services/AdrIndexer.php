@@ -27,7 +27,11 @@ final class AdrIndexer
      */
     public function sync(): int
     {
-        $adrs = $this->repository->all();
+        // Collapse any duplicate ids (a lint failure, but the index must not
+        // crash on it) so bulk upserts never target the same key twice.
+        $adrs = $this->repository->all()
+            ->keyBy(fn (AdrDto $adr): string => $adr->id)
+            ->values();
 
         AdrRecord::query()->getConnection()->transaction(function () use ($adrs): void {
             $this->upsertRecords($adrs);

@@ -96,6 +96,19 @@ it('exposes indexed relations through the AdrRecord model', function () {
         ->and($record?->relations->first()?->child_id)->toBe('0001');
 });
 
+it('degrades gracefully when two files share an id', function () {
+    $repo = app(AdrRepository::class);
+    $repo->save(record('0001', 'First', 'accepted'));
+    (new Filesystem)->put(
+        base_path('docs/adrs/0001-duplicate.md'),
+        "---\nid: \"0001\"\ntitle: Duplicate\nstatus: proposed\ndate: 2026-01-01\n---\n\n## Context\n\nx\n",
+    );
+
+    $this->artisan('adr:sync')->assertSuccessful();
+
+    expect(AdrRecord::query()->count())->toBe(1);
+});
+
 it('is idempotent across repeated runs', function () {
     app(AdrRepository::class)->save(record('0001', 'First'));
 

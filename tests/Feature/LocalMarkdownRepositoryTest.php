@@ -97,6 +97,17 @@ it('supersedes a record by linking both files reciprocally', function () {
         ->and($new?->status)->toBe('accepted');
 });
 
+it('refuses to let a record supersede itself', function () {
+    $repo = makeRepo(adrTestDir());
+    $repo->save(record('0001', 'Only decision', 'accepted'));
+
+    expect(fn () => $repo->supersede('0001', '0001'))
+        ->toThrow(InvalidArgumentException::class);
+
+    // The record is left untouched.
+    expect($repo->find('0001')?->status)->toBe('accepted');
+});
+
 it('throws when superseding an unknown record', function () {
     $repo = makeRepo(adrTestDir());
     $repo->save(record('0005', 'New decision'));

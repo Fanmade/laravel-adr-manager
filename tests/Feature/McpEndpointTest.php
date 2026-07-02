@@ -74,6 +74,16 @@ it('flags a get_adr_context miss as a tool error, not a protocol error', functio
         ->assertJsonPath('result.isError', true);
 });
 
+it('maps an unexpected failure to a JSON-RPC internal error', function () {
+    // A malformed file on disk makes the repository throw while listing.
+    (new Filesystem)->ensureDirectoryExists(base_path('docs/adrs'));
+    (new Filesystem)->put(base_path('docs/adrs/0001-broken.md'), "---\ntitle: No id\nstatus: accepted\n---\n\n## Context\n\nx\n");
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', ['name' => 'list_adrs']))
+        ->assertOk()
+        ->assertJsonPath('error.code', -32603);
+});
+
 it('returns a JSON-RPC error for an unknown method', function () {
     $this->postJson('/api/adr/mcp', rpc('does/not/exist'))
         ->assertOk()
