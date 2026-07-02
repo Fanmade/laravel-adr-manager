@@ -62,6 +62,13 @@ Operations must run and back up PostgreSQL.
 
 Valid statuses are `proposed`, `accepted`, `deprecated` and `superseded`.
 
+Two conventions keep parsing unambiguous:
+
+- Quote the `id` in front-matter (`id: '0007'`) so YAML does not coerce it to a
+  number and drop the zero-padding.
+- `## Context`, `## Decision` and `## Consequences` are reserved section
+  delimiters. Use `###` or deeper for headings inside a section's prose.
+
 ## Commands
 
 | Command | Purpose |
