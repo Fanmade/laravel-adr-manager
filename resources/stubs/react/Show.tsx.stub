@@ -1,0 +1,44 @@
+import { Link } from '@inertiajs/react'
+
+interface Adr {
+  id: string
+  title: string
+  status: string
+  date: string
+  context: string
+  decision: string
+  consequences: string
+}
+
+export default function Show({ record }: { record: Adr }) {
+  const sections: [string, string][] = [
+    ['Context', record.context],
+    ['Decision', record.decision],
+    ['Consequences', record.consequences],
+  ]
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <Link href="/adr" className="text-sm text-gray-500 hover:underline">
+        &larr; All records
+      </Link>
+
+      <header>
+        <p className="text-xs text-gray-500">
+          ADR-{record.id} &middot; {record.date}
+        </p>
+        <h1 className="text-2xl font-semibold">{record.title}</h1>
+        <span className="text-xs uppercase text-gray-500">{record.status}</span>
+      </header>
+
+      {sections
+        .filter(([, body]) => body)
+        .map(([heading, body]) => (
+          <section key={heading}>
+            <h2 className="mb-1 text-lg font-medium">{heading}</h2>
+            <p className="whitespace-pre-line text-sm text-gray-700">{body}</p>
+          </section>
+        ))}
+    </div>
+  )
+}

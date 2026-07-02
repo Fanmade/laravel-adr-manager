@@ -1,0 +1,33 @@
+<script setup>
+import { Link } from '@inertiajs/vue3'
+
+defineProps({
+  record: {
+    type: Object,
+    required: true,
+  },
+})
+
+const sections = (record) => [
+  ['Context', record.context],
+  ['Decision', record.decision],
+  ['Consequences', record.consequences],
+].filter(([, body]) => body)
+</script>
+
+<template>
+  <div class="mx-auto max-w-3xl space-y-6 p-6">
+    <Link href="/adr" class="text-sm text-gray-500 hover:underline">&larr; All records</Link>
+
+    <header>
+      <p class="text-xs text-gray-500">ADR-{{ record.id }} &middot; {{ record.date }}</p>
+      <h1 class="text-2xl font-semibold">{{ record.title }}</h1>
+      <span class="text-xs uppercase text-gray-500">{{ record.status }}</span>
+    </header>
+
+    <section v-for="[heading, body] in sections(record)" :key="heading">
+      <h2 class="mb-1 text-lg font-medium">{{ heading }}</h2>
+      <p class="whitespace-pre-line text-sm text-gray-700">{{ body }}</p>
+    </section>
+  </div>
+</template>

@@ -1,19 +1,34 @@
+import { Link } from '@inertiajs/react'
+
 interface Adr {
   id: string
   title: string
   status: string
 }
 
+const pill = (status: string): string =>
+  ({
+    accepted: 'bg-green-100 text-green-800',
+    proposed: 'bg-yellow-100 text-yellow-800',
+    deprecated: 'bg-gray-100 text-gray-600',
+    superseded: 'bg-gray-100 text-gray-600',
+  })[status] ?? 'bg-red-100 text-red-800'
+
 export default function Index({ records }: { records: Adr[] }) {
   return (
-    <ul className="space-y-2">
-      {records.map((adr) => (
-        <li key={adr.id} className="rounded border p-3">
-          <span className="text-xs text-gray-500">ADR-{adr.id}</span>
-          <span className="font-medium">{adr.title}</span>
-          <span className="ml-2 text-xs uppercase">{adr.status}</span>
-        </li>
+    <div className="mx-auto max-w-3xl space-y-2 p-6">
+      <h1 className="text-xl font-semibold">Architecture Decision Records</h1>
+      {records.map((record) => (
+        <Link
+          key={record.id}
+          href={`/adr/${record.id}`}
+          className="flex items-center gap-3 rounded border p-3 hover:bg-gray-50"
+        >
+          <span className="text-xs text-gray-500">ADR-{record.id}</span>
+          <span className="font-medium">{record.title}</span>
+          <span className={`ml-auto rounded-full px-2 py-0.5 text-xs ${pill(record.status)}`}>{record.status}</span>
+        </Link>
       ))}
-    </ul>
+    </div>
   )
 }

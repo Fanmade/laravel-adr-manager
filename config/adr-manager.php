@@ -96,6 +96,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Authoring
+    |--------------------------------------------------------------------------
+    |
+    | Environments in which the UI may write records to disk. Everywhere else
+    | the UI is read-only and surfaces copy-paste git commit blocks instead of
+    | editable forms, keeping deployed tiers aligned with the Git workflow.
+    |
+    */
+
+    'authoring' => [
+        'environments' => ['local'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Database connection
     |--------------------------------------------------------------------------
     |

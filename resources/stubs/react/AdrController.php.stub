@@ -10,7 +10,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Starter Inertia controller. It depends only on the AdrRepository contract.
+ * Starter Inertia controller. It depends only on the AdrRepository contract,
+ * never a concrete storage class.
  */
 class AdrController
 {
@@ -20,6 +21,17 @@ class AdrController
             'records' => $repository->all()
                 ->map(fn (AdrDto $adr): array => $adr->toArray())
                 ->values(),
+        ]);
+    }
+
+    public function show(AdrRepository $repository, string $id): Response
+    {
+        $adr = $repository->find($id);
+
+        abort_if($adr === null, 404);
+
+        return Inertia::render('Adr/Show', [
+            'record' => $adr->toArray(),
         ]);
     }
 }

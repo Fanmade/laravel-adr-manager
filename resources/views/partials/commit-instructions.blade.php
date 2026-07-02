@@ -1,0 +1,8 @@
+<div class="space-y-3 rounded border border-amber-300 bg-amber-50 p-4">
+    <p class="text-sm text-amber-800">
+        Writing is disabled in this environment. Save the file below, then commit it:
+    </p>
+    <p class="font-mono text-xs text-gray-600">{{ $instructions['path'] }}</p>
+    <pre class="overflow-x-auto rounded bg-white p-3 text-xs"><code>{{ $instructions['markdown'] }}</code></pre>
+    <pre class="overflow-x-auto rounded bg-gray-900 p-3 text-xs text-gray-100"><code>{{ $instructions['commands'] }}</code></pre>
+</div>

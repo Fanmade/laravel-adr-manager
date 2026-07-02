@@ -1,18 +1,33 @@
 <script setup>
+import { Link } from '@inertiajs/vue3'
+
 defineProps({
   records: {
     type: Array,
     required: true,
   },
 })
+
+const pill = (status) => ({
+  accepted: 'bg-green-100 text-green-800',
+  proposed: 'bg-yellow-100 text-yellow-800',
+  deprecated: 'bg-gray-100 text-gray-600',
+  superseded: 'bg-gray-100 text-gray-600',
+}[status] ?? 'bg-red-100 text-red-800')
 </script>
 
 <template>
-  <ul class="space-y-2">
-    <li v-for="adr in records" :key="adr.id" class="rounded border p-3">
-      <span class="text-xs text-gray-500">ADR-{{ adr.id }}</span>
-      <span class="font-medium">{{ adr.title }}</span>
-      <span class="ml-2 text-xs uppercase">{{ adr.status }}</span>
-    </li>
-  </ul>
+  <div class="mx-auto max-w-3xl space-y-2 p-6">
+    <h1 class="text-xl font-semibold">Architecture Decision Records</h1>
+    <Link
+      v-for="record in records"
+      :key="record.id"
+      :href="`/adr/${record.id}`"
+      class="flex items-center gap-3 rounded border p-3 hover:bg-gray-50"
+    >
+      <span class="text-xs text-gray-500">ADR-{{ record.id }}</span>
+      <span class="font-medium">{{ record.title }}</span>
+      <span :class="['ml-auto rounded-full px-2 py-0.5 text-xs', pill(record.status)]">{{ record.status }}</span>
+    </Link>
+  </div>
 </template>

@@ -7,6 +7,7 @@ namespace Fanmade\AdrManager\Tests;
 use Fanmade\AdrManager\AdrManagerServiceProvider;
 use Fanmade\AdrManager\Tests\Support\PredefinedGateServiceProvider;
 use Illuminate\Foundation\Application;
+use Livewire\LivewireServiceProvider;
 
 /**
  * Boots a host-defined authorization gate before the package provider so the
@@ -21,6 +22,7 @@ class PreconfiguredTestCase extends TestCase
     protected function getPackageProviders($app): array
     {
         return [
+            LivewireServiceProvider::class,
             PredefinedGateServiceProvider::class,
             AdrManagerServiceProvider::class,
         ];

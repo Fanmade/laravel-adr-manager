@@ -10,6 +10,10 @@ use Fanmade\AdrManager\Console\Commands\LintCommand;
 use Fanmade\AdrManager\Console\Commands\SyncCommand;
 use Fanmade\AdrManager\Console\StackInstaller;
 use Fanmade\AdrManager\Contracts\AdrRepository;
+use Fanmade\AdrManager\Livewire\AdrCreate;
+use Fanmade\AdrManager\Livewire\AdrEdit;
+use Fanmade\AdrManager\Livewire\AdrIndex;
+use Fanmade\AdrManager\Livewire\AdrShow;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
 use Fanmade\AdrManager\Services\AdrLinter;
 use Fanmade\AdrManager\Services\MarkdownGenerator;
@@ -20,6 +24,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 
 final class AdrManagerServiceProvider extends ServiceProvider
 {
@@ -28,6 +33,8 @@ final class AdrManagerServiceProvider extends ServiceProvider
     private const string MIGRATIONS_DIR = __DIR__.'/../database/migrations';
 
     private const string ROUTES_DIR = __DIR__.'/../routes';
+
+    private const string VIEWS_DIR = __DIR__.'/../resources/views';
 
     public function register(): void
     {
@@ -57,8 +64,10 @@ final class AdrManagerServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(self::MIGRATIONS_DIR);
+        $this->loadViewsFrom(self::VIEWS_DIR, 'adr-manager');
         $this->registerAuthorization();
         $this->registerRoutes();
+        $this->registerLivewireComponents();
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
@@ -68,6 +77,10 @@ final class AdrManagerServiceProvider extends ServiceProvider
             $this->publishes([
                 self::MIGRATIONS_DIR => $this->app->databasePath('migrations'),
             ], 'adr-manager-migrations');
+
+            $this->publishes([
+                self::VIEWS_DIR => $this->app->resourcePath('views/vendor/adr-manager'),
+            ], 'adr-manager-views');
 
             $this->commands([
                 SyncCommand::class,
@@ -109,24 +122,49 @@ final class AdrManagerServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register the Livewire dashboard components when Livewire is installed.
+     * The package works headlessly without it.
+     */
+    private function registerLivewireComponents(): void
+    {
+        if (class_exists(Livewire::class)) {
+            Livewire::component('adr-index', AdrIndex::class);
+            Livewire::component('adr-show', AdrShow::class);
+            Livewire::component('adr-create', AdrCreate::class);
+            Livewire::component('adr-edit', AdrEdit::class);
+        }
+    }
+
+    /**
      * @return array<string, list<array{0: string, 1: string}>>
      */
     private function stackManifest(Application $app): array
     {
         $stubs = __DIR__.'/../resources/stubs';
+        $views = self::VIEWS_DIR;
 
         return [
+            // Livewire ships as working package components; publishing exposes
+            // the Blade views so a host application can restyle the dashboard.
             'livewire' => [
-                [$stubs.'/livewire/AdrIndex.php.stub', $app->basePath('app/Livewire/Adr/AdrIndex.php')],
-                [$stubs.'/livewire/index.blade.php.stub', $app->resourcePath('views/vendor/adr-manager/adr-index.blade.php')],
+                [$views.'/layouts/app.blade.php', $app->resourcePath('views/vendor/adr-manager/layouts/app.blade.php')],
+                [$views.'/partials/status-pill.blade.php', $app->resourcePath('views/vendor/adr-manager/partials/status-pill.blade.php')],
+                [$views.'/partials/form-fields.blade.php', $app->resourcePath('views/vendor/adr-manager/partials/form-fields.blade.php')],
+                [$views.'/partials/commit-instructions.blade.php', $app->resourcePath('views/vendor/adr-manager/partials/commit-instructions.blade.php')],
+                [$views.'/livewire/adr-index.blade.php', $app->resourcePath('views/vendor/adr-manager/livewire/adr-index.blade.php')],
+                [$views.'/livewire/adr-show.blade.php', $app->resourcePath('views/vendor/adr-manager/livewire/adr-show.blade.php')],
+                [$views.'/livewire/adr-create.blade.php', $app->resourcePath('views/vendor/adr-manager/livewire/adr-create.blade.php')],
+                [$views.'/livewire/adr-edit.blade.php', $app->resourcePath('views/vendor/adr-manager/livewire/adr-edit.blade.php')],
             ],
             'vue' => [
                 [$stubs.'/vue/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
                 [$stubs.'/vue/Index.vue.stub', $app->resourcePath('js/Pages/Adr/Index.vue')],
+                [$stubs.'/vue/Show.vue.stub', $app->resourcePath('js/Pages/Adr/Show.vue')],
             ],
             'react' => [
                 [$stubs.'/react/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
                 [$stubs.'/react/Index.tsx.stub', $app->resourcePath('js/Pages/Adr/Index.tsx')],
+                [$stubs.'/react/Show.tsx.stub', $app->resourcePath('js/Pages/Adr/Show.tsx')],
             ],
         ];
     }

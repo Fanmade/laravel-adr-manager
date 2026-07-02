@@ -15,19 +15,27 @@ it('denies control-plane access outside the local environment', function () {
     $this->get('/adr')->assertForbidden();
 });
 
-it('serves the record index in the local environment', function () {
+it('serves the dashboard in the local environment', function () {
     $this->app['env'] = 'local';
 
-    $this->getJson('/adr')->assertOk()->assertExactJson([]);
+    $this->get('/adr')
+        ->assertOk()
+        ->assertSee('Architecture Decision Records');
 });
 
-it('returns a single record as json', function () {
+it('exposes a json api under the api prefix', function () {
+    $this->app['env'] = 'local';
+
+    $this->getJson('/api/adr')->assertOk()->assertExactJson([]);
+});
+
+it('returns a single record as json from the api', function () {
     $this->app['env'] = 'local';
     config()->set('adr-manager.path', 'docs/adrs');
     app()->forgetInstance(AdrRepository::class);
     app(AdrRepository::class)->save(record('0001', 'First decision', 'accepted'));
 
-    $this->getJson('/adr/0001')
+    $this->getJson('/api/adr/0001')
         ->assertOk()
         ->assertJsonPath('id', '0001')
         ->assertJsonPath('title', 'First decision');
@@ -36,21 +44,12 @@ it('returns a single record as json', function () {
 it('returns 404 for an unknown record', function () {
     $this->app['env'] = 'local';
 
-    $this->getJson('/adr/9999')->assertNotFound();
-});
-
-it('exposes a json api under the api prefix', function () {
-    $this->app['env'] = 'local';
-
-    $this->getJson('/api/adr')->assertOk();
+    $this->getJson('/api/adr/9999')->assertNotFound();
 });
 
 it('honours a custom override of the authorization gate', function () {
-    Gate::define(
-        'viewAdrManager',
-        fn (?Authenticatable $user) => true,
-    );
+    Gate::define('viewAdrManager', fn (?Authenticatable $user) => true);
 
     // Environment is "testing" (not local), yet the override grants access.
-    $this->getJson('/adr')->assertOk();
+    $this->get('/adr')->assertOk();
 });

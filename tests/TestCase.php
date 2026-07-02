@@ -6,6 +6,7 @@ namespace Fanmade\AdrManager\Tests;
 
 use Fanmade\AdrManager\AdrManagerServiceProvider;
 use Illuminate\Foundation\Application;
+use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 abstract class TestCase extends Orchestra
@@ -17,6 +18,7 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
+            LivewireServiceProvider::class,
             AdrManagerServiceProvider::class,
         ];
     }
