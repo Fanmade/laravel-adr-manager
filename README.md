@@ -94,16 +94,33 @@ disposable and can be rebuilt from disk at any time:
 php artisan adr:sync
 ```
 
+## Dashboard
+
+When [Livewire](https://livewire.laravel.com) is installed, the package serves
+a dashboard (Index / Show / Create / Edit) under the configured prefix:
+
+- `GET /adr` — record index (searchable)
+- `GET /adr/create` — author a new record
+- `GET /adr/{id}` — view a record
+- `GET /adr/{id}/edit` — edit a record
+
+Writing is only enabled in the environments listed in
+`adr-manager.authoring.environments` (default: `local`). Elsewhere the forms are
+replaced by the exact Markdown and `git` commands to commit the record by hand,
+keeping deployed tiers aligned with the Git workflow.
+
+`php artisan adr:install livewire` publishes the Blade views for restyling. The
+Vue and React stacks publish editable Inertia components instead.
+
 ## Control plane and authorization
 
-The package registers read-only routes (default prefix `adr`, and `api/adr` for
-JSON):
+Alongside the dashboard, a JSON API is always available under `api/adr`:
 
-- `GET /adr` — record index
-- `GET /adr/{id}` — single record
+- `GET /api/adr` — record index
+- `GET /api/adr/{id}` — single record
 - `POST /api/adr/mcp` — MCP endpoint (see below)
 
-Access is guarded by the `viewAdrManager` gate, which is **open in the local
+Both are guarded by the `viewAdrManager` gate, which is **open in the local
 environment and denied everywhere else** until you define it yourself:
 
 ```php
