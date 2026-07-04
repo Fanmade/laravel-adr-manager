@@ -7,6 +7,7 @@ namespace Fanmade\AdrManager;
 use Fanmade\AdrManager\Console\Commands\ChangelogCommand;
 use Fanmade\AdrManager\Console\Commands\InstallCommand;
 use Fanmade\AdrManager\Console\Commands\LintCommand;
+use Fanmade\AdrManager\Console\Commands\MakeCommand;
 use Fanmade\AdrManager\Console\Commands\SyncCommand;
 use Fanmade\AdrManager\Console\StackInstaller;
 use Fanmade\AdrManager\Contracts\AdrRepository;
@@ -83,6 +84,7 @@ final class AdrManagerServiceProvider extends ServiceProvider
             ], 'adr-manager-views');
 
             $this->commands([
+                MakeCommand::class,
                 SyncCommand::class,
                 LintCommand::class,
                 ChangelogCommand::class,

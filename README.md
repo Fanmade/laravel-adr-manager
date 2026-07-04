@@ -79,6 +79,7 @@ Two conventions keep parsing unambiguous:
 
 | Command | Purpose |
 | --- | --- |
+| `adr:make` | Create the next record from the terminal. Options: `--status`, `--author`, `--supersedes=*` (reciprocal linking). Prints the git commands to commit it. |
 | `adr:sync` | Reconcile the database index with the files on disk. |
 | `adr:lint` | Validate format, statuses, links and sequence integrity. Exits non-zero on any issue. |
 | `adr:changelog` | Compile a Markdown changelog. Options: `--from`, `--to`, `--output`. |

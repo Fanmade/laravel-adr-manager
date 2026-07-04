@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fanmade\AdrManager\Contracts;
 
 use Fanmade\AdrManager\Data\AdrDto;
+use Fanmade\AdrManager\Exceptions\AdrNotFound;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
 use Illuminate\Support\Collection;
 
@@ -38,4 +39,12 @@ interface AdrRepository
      * The highest sequence number currently in use (0 when empty).
      */
     public function getLatestSequence(): int;
+
+    /**
+     * Mark $targetId as superseded by $newId, updating both records
+     * reciprocally (status, backlinks and supersedes lists).
+     *
+     * @throws AdrNotFound when either record is missing.
+     */
+    public function supersede(string $targetId, string $newId): void;
 }

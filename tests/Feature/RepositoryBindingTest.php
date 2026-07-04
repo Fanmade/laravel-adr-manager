@@ -67,6 +67,8 @@ it('lets the host application swap the repository implementation wholesale', fun
         {
             return 42;
         }
+
+        public function supersede(string $targetId, string $newId): void {}
     };
 
     app()->instance(AdrRepository::class, $fake);
