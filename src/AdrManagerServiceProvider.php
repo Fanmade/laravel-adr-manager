@@ -13,6 +13,7 @@ use Fanmade\AdrManager\Console\StackInstaller;
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Livewire\AdrCreate;
 use Fanmade\AdrManager\Livewire\AdrEdit;
+use Fanmade\AdrManager\Livewire\AdrGraph;
 use Fanmade\AdrManager\Livewire\AdrIndex;
 use Fanmade\AdrManager\Livewire\AdrShow;
 use Fanmade\AdrManager\Repositories\LocalMarkdownRepository;
@@ -134,6 +135,7 @@ final class AdrManagerServiceProvider extends ServiceProvider
             Livewire::component('adr-show', AdrShow::class);
             Livewire::component('adr-create', AdrCreate::class);
             Livewire::component('adr-edit', AdrEdit::class);
+            Livewire::component('adr-graph', AdrGraph::class);
         }
     }
 

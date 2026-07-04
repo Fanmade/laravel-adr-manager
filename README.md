@@ -108,6 +108,7 @@ a dashboard (Index / Show / Create / Edit) under the configured prefix:
 
 - `GET /adr` — record index (searchable)
 - `GET /adr/create` — author a new record
+- `GET /adr/graph` — supersede relation graph (reads the index; run `adr:sync`)
 - `GET /adr/{id}` — view a record
 - `GET /adr/{id}/edit` — edit a record
 

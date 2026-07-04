@@ -1,9 +1,11 @@
 <div class="space-y-4">
     <div class="flex items-center gap-3">
         <h1 class="text-xl font-semibold">Architecture Decision Records</h1>
+        <a href="{{ route('adr-manager.graph') }}" wire:navigate
+           class="ml-auto text-sm text-gray-500 hover:underline">Graph</a>
         @if ($canPersist)
             <a href="{{ route('adr-manager.create') }}" wire:navigate
-               class="ml-auto whitespace-nowrap rounded bg-gray-900 px-3 py-2 text-sm text-white">New ADR</a>
+               class="whitespace-nowrap rounded bg-gray-900 px-3 py-2 text-sm text-white">New ADR</a>
         @endif
     </div>
 

@@ -13,6 +13,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   sections, reading the file source of truth) and `create_adr` — the first
   write tool. It persists only in the configured authoring environments and
   otherwise returns the Markdown plus git commands for a manual commit.
+- Relation graph view at `GET /adr/graph`: server-rendered SVG of the
+  supersede graph (git-log style), reading the `adr:sync`ed index per
+  ADR 0003, with linked nodes and a hint when the index is empty.
 
 ## [0.2.0] - 2026-07-04
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Fanmade\AdrManager\Http\Middleware\Authorize;
 use Fanmade\AdrManager\Livewire\AdrCreate;
 use Fanmade\AdrManager\Livewire\AdrEdit;
+use Fanmade\AdrManager\Livewire\AdrGraph;
 use Fanmade\AdrManager\Livewire\AdrIndex;
 use Fanmade\AdrManager\Livewire\AdrShow;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::group([
 ], function (): void {
     Route::get('/', AdrIndex::class)->name('adr-manager.index');
     Route::get('/create', AdrCreate::class)->name('adr-manager.create');
+    Route::get('/graph', AdrGraph::class)->name('adr-manager.graph');
     Route::get('/{id}', AdrShow::class)->name('adr-manager.show');
     Route::get('/{id}/edit', AdrEdit::class)->name('adr-manager.edit');
 });
