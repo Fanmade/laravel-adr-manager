@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Fanmade\AdrManager\Livewire\Concerns;
 
 use Fanmade\AdrManager\Data\AdrDto;
-use Fanmade\AdrManager\Services\MarkdownGenerator;
+use Fanmade\AdrManager\Support\CommitInstructions;
 use Fanmade\AdrManager\Support\Environment;
-use Illuminate\Support\Str;
 
 /**
  * Shared authoring behaviour for the editing components: whether writes are
@@ -29,20 +28,6 @@ trait AuthorsAdrs
      */
     protected function commitInstructions(AdrDto $adr): array
     {
-        $directory = config('adr-manager.path', 'docs/adrs');
-        $directory = is_string($directory) ? $directory : 'docs/adrs';
-        $path = rtrim($directory, '/').'/'.$adr->id.'-'.Str::slug($adr->title).'.md';
-
-        $commands = sprintf(
-            "git add %s\ngit commit -m %s",
-            $path,
-            escapeshellarg("docs(adr): {$adr->id} {$adr->title}"),
-        );
-
-        return [
-            'markdown' => app(MarkdownGenerator::class)->render($adr),
-            'path' => $path,
-            'commands' => $commands,
-        ];
+        return app(CommitInstructions::class)->for($adr);
     }
 }
