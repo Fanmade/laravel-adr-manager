@@ -1,0 +1,60 @@
+import type { FormEvent } from 'react'
+import { Link, useForm } from '@inertiajs/react'
+import AdrForm, { type AdrFormData } from './Form'
+import CommitInstructions, { type Instructions } from './CommitInstructions'
+
+interface Adr {
+  id: string
+  title: string
+  status: string
+  context: string
+  decision: string
+  consequences: string
+  supersedes?: string[]
+}
+
+export default function Edit({
+  record,
+  statuses,
+  canPersist,
+  instructions = null,
+}: {
+  record: Adr
+  statuses: string[]
+  canPersist: boolean
+  instructions?: Instructions | null
+}) {
+  const form = useForm<AdrFormData>({
+    title: record.title,
+    status: record.status,
+    context: record.context,
+    decision: record.decision,
+    consequences: record.consequences,
+    supersedes: [...(record.supersedes ?? [])],
+  })
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    form.put(`/adr/${record.id}`)
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <div className="flex items-center gap-3">
+        <Link href={`/adr/${record.id}`} className="text-sm text-gray-500 hover:underline">
+          &larr; ADR-{record.id}
+        </Link>
+        <h1 className="text-xl font-semibold">Edit ADR-{record.id}</h1>
+      </div>
+
+      <form className="space-y-6" onSubmit={submit}>
+        <AdrForm form={form} statuses={statuses} />
+        <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-white">
+          {canPersist ? 'Save changes' : 'Preview commit instructions'}
+        </button>
+      </form>
+
+      {instructions && <CommitInstructions instructions={instructions} />}
+    </div>
+  )
+}

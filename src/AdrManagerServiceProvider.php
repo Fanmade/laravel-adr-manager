@@ -169,6 +169,10 @@ final class AdrManagerServiceProvider extends ServiceProvider
                 [$stubs.'/react/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
                 [$stubs.'/react/Index.tsx.stub', $app->resourcePath('js/Pages/Adr/Index.tsx')],
                 [$stubs.'/react/Show.tsx.stub', $app->resourcePath('js/Pages/Adr/Show.tsx')],
+                [$stubs.'/react/Create.tsx.stub', $app->resourcePath('js/Pages/Adr/Create.tsx')],
+                [$stubs.'/react/Edit.tsx.stub', $app->resourcePath('js/Pages/Adr/Edit.tsx')],
+                [$stubs.'/react/Form.tsx.stub', $app->resourcePath('js/Pages/Adr/Form.tsx')],
+                [$stubs.'/react/CommitInstructions.tsx.stub', $app->resourcePath('js/Pages/Adr/CommitInstructions.tsx')],
             ],
         ];
     }

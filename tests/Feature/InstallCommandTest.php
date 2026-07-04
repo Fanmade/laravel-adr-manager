@@ -46,7 +46,22 @@ it('installs the react starter stack', function () {
     $this->artisan('adr:install', ['stack' => 'react'])->assertSuccessful();
 
     expect(file_exists(resource_path('js/Pages/Adr/Index.tsx')))->toBeTrue()
-        ->and(file_exists(resource_path('js/Pages/Adr/Show.tsx')))->toBeTrue();
+        ->and(file_exists(resource_path('js/Pages/Adr/Show.tsx')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Create.tsx')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Edit.tsx')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Form.tsx')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/CommitInstructions.tsx')))->toBeTrue();
+});
+
+it('publishes a react controller that talks only to the repository contract', function () {
+    $this->artisan('adr:install', ['stack' => 'react'])->assertSuccessful();
+
+    $controller = file_get_contents(app_path('Http/Controllers/Adr/AdrController.php'));
+
+    expect($controller)->toContain('AdrRepository')
+        ->not->toContain('LocalMarkdownRepository')
+        ->toContain('public function store(')
+        ->toContain('public function update(');
 });
 
 it('is case-insensitive about the stack name', function () {

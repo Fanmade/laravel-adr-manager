@@ -1,0 +1,112 @@
+import { useState } from 'react'
+import type { InertiaFormProps } from '@inertiajs/react'
+
+export interface AdrFormData {
+  title: string
+  status: string
+  context: string
+  decision: string
+  consequences: string
+  supersedes: string[]
+  [key: string]: string | string[]
+}
+
+const textareas: ['context' | 'decision' | 'consequences', string][] = [
+  ['context', 'Context'],
+  ['decision', 'Decision'],
+  ['consequences', 'Consequences'],
+]
+
+export default function Form({ form, statuses }: { form: InertiaFormProps<AdrFormData>; statuses: string[] }) {
+  const [supersedeInput, setSupersedeInput] = useState('')
+
+  const addSupersede = () => {
+    const id = supersedeInput.trim()
+    if (id && !form.data.supersedes.includes(id)) {
+      form.setData('supersedes', [...form.data.supersedes, id])
+    }
+    setSupersedeInput('')
+  }
+
+  const removeSupersede = (id: string) => {
+    form.setData(
+      'supersedes',
+      form.data.supersedes.filter((existing) => existing !== id),
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium">Title</label>
+        <input
+          type="text"
+          value={form.data.title}
+          onChange={(e) => form.setData('title', e.target.value)}
+          className="w-full rounded border px-3 py-2"
+        />
+        {form.errors.title && <p className="mt-1 text-sm text-red-600">{form.errors.title}</p>}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Status</label>
+        <select
+          value={form.data.status}
+          onChange={(e) => form.setData('status', e.target.value)}
+          className="w-full rounded border px-3 py-2"
+        >
+          {statuses.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        {form.errors.status && <p className="mt-1 text-sm text-red-600">{form.errors.status}</p>}
+      </div>
+
+      {textareas.map(([field, label]) => (
+        <div key={field}>
+          <label className="block text-sm font-medium">{label}</label>
+          <textarea
+            value={form.data[field]}
+            onChange={(e) => form.setData(field, e.target.value)}
+            rows={4}
+            className="w-full rounded border px-3 py-2 font-mono text-sm"
+          />
+        </div>
+      ))}
+
+      <div>
+        <label className="block text-sm font-medium">Supersedes</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={supersedeInput}
+            onChange={(e) => setSupersedeInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addSupersede()
+              }
+            }}
+            placeholder="e.g. 0002"
+            className="flex-1 rounded border px-3 py-2"
+          />
+          <button type="button" className="rounded border px-3" onClick={addSupersede}>
+            Add
+          </button>
+        </div>
+        <ul className="mt-2 flex flex-wrap gap-2">
+          {form.data.supersedes.map((id) => (
+            <li key={id} className="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-sm">
+              ADR-{id}
+              <button type="button" className="text-gray-500" onClick={() => removeSupersede(id)}>
+                &times;
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}

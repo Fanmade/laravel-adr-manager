@@ -110,10 +110,10 @@ replaced by the exact Markdown and `git` commands to commit the record by hand,
 keeping deployed tiers aligned with the Git workflow.
 
 `php artisan adr:install livewire` publishes the Blade views for restyling. The
-Vue and React stacks publish editable Inertia components instead: Vue covers
-the full dashboard (Index / Show / Create / Edit with the same environment
-write gate), React currently ships Index / Show. Register the routes yourself —
-the published controller's docblock contains a copy-paste example.
+Vue and React stacks publish editable Inertia components instead, covering the
+full dashboard (Index / Show / Create / Edit with the same environment write
+gate). Register the routes yourself — the published controller's docblock
+contains a copy-paste example.
 
 ## Control plane and authorization
 

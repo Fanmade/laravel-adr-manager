@@ -1,0 +1,48 @@
+import type { FormEvent } from 'react'
+import { Link, useForm } from '@inertiajs/react'
+import AdrForm, { type AdrFormData } from './Form'
+import CommitInstructions, { type Instructions } from './CommitInstructions'
+
+export default function Create({
+  statuses,
+  canPersist,
+  instructions = null,
+}: {
+  statuses: string[]
+  canPersist: boolean
+  instructions?: Instructions | null
+}) {
+  const form = useForm<AdrFormData>({
+    title: '',
+    status: 'proposed',
+    context: '',
+    decision: '',
+    consequences: '',
+    supersedes: [],
+  })
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    form.post('/adr')
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 p-6">
+      <div className="flex items-center gap-3">
+        <Link href="/adr" className="text-sm text-gray-500 hover:underline">
+          &larr; All records
+        </Link>
+        <h1 className="text-xl font-semibold">New ADR</h1>
+      </div>
+
+      <form className="space-y-6" onSubmit={submit}>
+        <AdrForm form={form} statuses={statuses} />
+        <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-white">
+          {canPersist ? 'Create record' : 'Preview commit instructions'}
+        </button>
+      </form>
+
+      {instructions && <CommitInstructions instructions={instructions} />}
+    </div>
+  )
+}
