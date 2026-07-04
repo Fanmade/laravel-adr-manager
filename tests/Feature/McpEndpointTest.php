@@ -157,3 +157,141 @@ it('requires authorization outside local', function () {
 
     $this->postJson('/api/adr/mcp', rpc('ping'))->assertForbidden();
 });
+
+// --- search_adrs -----------------------------------------------------------
+
+it('lists search_adrs and create_adr as available tools', function () {
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/list'))->assertOk();
+
+    $names = array_column($response->json('result.tools'), 'name');
+
+    expect($names)->toContain('search_adrs')
+        ->and($names)->toContain('create_adr');
+});
+
+it('searches records by title', function () {
+    app(AdrRepository::class)->save(record('0001', 'Adopt PostgreSQL', 'accepted'));
+    app(AdrRepository::class)->save(record('0002', 'Adopt Redis', 'accepted'));
+
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'search_adrs',
+        'arguments' => ['query' => 'postgres'],
+    ]))->assertOk();
+
+    expect($response->json('result.content.0.text'))->toContain('0001')
+        ->and($response->json('result.content.0.text'))->not->toContain('0002');
+});
+
+it('searches records by section content', function () {
+    app(AdrRepository::class)->save(
+        record('0001', 'Storage decision', 'accepted')->with(decision: 'We use MariaDB with row compression.'),
+    );
+
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'search_adrs',
+        'arguments' => ['query' => 'mariadb'],
+    ]))->assertOk();
+
+    expect($response->json('result.content.0.text'))->toContain('0001');
+});
+
+it('returns an empty result set for an unmatched search', function () {
+    app(AdrRepository::class)->save(record('0001', 'First', 'accepted'));
+
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'search_adrs',
+        'arguments' => ['query' => 'kubernetes'],
+    ]))->assertOk();
+
+    expect($response->json('result.content.0.text'))->toBe('[]');
+});
+
+it('rejects a search without a query', function () {
+    $this->postJson('/api/adr/mcp', rpc('tools/call', ['name' => 'search_adrs']))
+        ->assertOk()
+        ->assertJsonPath('error.code', -32602);
+});
+
+// --- create_adr --------------------------------------------------------------
+
+it('creates a record through mcp in a writable environment', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'Agent decision', 'decision' => 'Chosen by the agent.'],
+    ]))->assertOk();
+
+    expect($response->json('result.content.0.text'))->toContain('"persisted": true')
+        ->and(app(AdrRepository::class)->find('0001')?->title)->toBe('Agent decision');
+});
+
+it('supersedes reciprocally when creating through mcp', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+    app(AdrRepository::class)->save(record('0001', 'Old way', 'accepted'));
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'New way', 'supersedes' => ['0001']],
+    ]))->assertOk();
+
+    $old = app(AdrRepository::class)->find('0001');
+
+    expect($old->status)->toBe('superseded')
+        ->and($old->backlinks)->toContain('0002');
+});
+
+it('returns commit instructions instead of writing in a non-writable environment', function () {
+    config()->set('adr-manager.authoring.environments', ['production']);
+
+    $response = $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'Remote idea'],
+    ]))->assertOk();
+
+    expect($response->json('result.content.0.text'))->toContain('"persisted": false')
+        ->and($response->json('result.content.0.text'))->toContain('git add')
+        ->and(app(AdrRepository::class)->all())->toHaveCount(0);
+});
+
+it('rejects create_adr without a title', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', ['name' => 'create_adr']))
+        ->assertOk()
+        ->assertJsonPath('error.code', -32602);
+});
+
+it('rejects create_adr with an invalid status', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'Bad', 'status' => 'yolo'],
+    ]))->assertOk()->assertJsonPath('error.code', -32602);
+
+    expect(app(AdrRepository::class)->all())->toHaveCount(0);
+});
+
+it('ignores non-string entries in the supersedes argument', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+    app(AdrRepository::class)->save(record('0001', 'Old way', 'accepted'));
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'New way', 'supersedes' => [123, '0001']],
+    ]))->assertOk();
+
+    expect(app(AdrRepository::class)->find('0002')->supersedes)->toBe(['0001']);
+});
+
+it('rejects create_adr superseding an unknown record', function () {
+    config()->set('adr-manager.authoring.environments', ['local']);
+
+    $this->postJson('/api/adr/mcp', rpc('tools/call', [
+        'name' => 'create_adr',
+        'arguments' => ['title' => 'Orphan', 'supersedes' => ['9999']],
+    ]))->assertOk()->assertJsonPath('error.code', -32602);
+
+    expect(app(AdrRepository::class)->all())->toHaveCount(0);
+});

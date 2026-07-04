@@ -6,6 +6,7 @@ namespace Fanmade\AdrManager\Livewire;
 
 use Fanmade\AdrManager\Data\AdrDto;
 use Fanmade\AdrManager\Livewire\Concerns\AuthorsAdrs;
+use Fanmade\AdrManager\Support\Statuses;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -86,8 +87,6 @@ abstract class AdrForm extends Component
      */
     protected function allowedStatuses(): array
     {
-        $statuses = config('adr-manager.statuses', []);
-
-        return is_array($statuses) ? array_values(array_filter($statuses, 'is_string')) : [];
+        return Statuses::allowed();
     }
 }

@@ -146,11 +146,16 @@ middleware, or disable it entirely with `routing.enabled`).
 ## MCP endpoint
 
 `POST /api/adr/mcp` speaks JSON-RPC 2.0 following the Model Context Protocol.
-It supports `initialize`, `ping`, `tools/list` and `tools/call`, exposing two
-read-only tools:
+It supports `initialize`, `ping`, `tools/list` and `tools/call`, exposing:
 
 - `list_adrs` — the decision timeline
 - `get_adr_context` — the full content of one record by `id`
+- `search_adrs` — case-insensitive substring search over titles and sections
+- `create_adr` — the only write tool. It persists solely in the environments
+  listed in `adr-manager.authoring.environments`; everywhere else it returns
+  the rendered Markdown plus the git commands so the agent (or you) can commit
+  the record through the normal Git workflow. Like every route, it also sits
+  behind the `viewAdrManager` gate.
 
 ```bash
 curl -X POST https://your-app.test/api/adr/mcp \

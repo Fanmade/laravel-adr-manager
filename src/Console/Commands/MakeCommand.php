@@ -8,6 +8,7 @@ use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Data\AdrDto;
 use Fanmade\AdrManager\Support\CommitInstructions;
 use Fanmade\AdrManager\Support\Environment;
+use Fanmade\AdrManager\Support\Statuses;
 use Illuminate\Console\Command;
 
 /**
@@ -98,8 +99,6 @@ final class MakeCommand extends Command
      */
     private function allowedStatuses(): array
     {
-        $statuses = config('adr-manager.statuses', []);
-
-        return is_array($statuses) ? array_values(array_filter($statuses, 'is_string')) : [];
+        return Statuses::allowed();
     }
 }

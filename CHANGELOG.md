@@ -7,6 +7,34 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- MCP tools `search_adrs` (case-insensitive substring search over titles and
+  sections, reading the file source of truth) and `create_adr` — the first
+  write tool. It persists only in the configured authoring environments and
+  otherwise returns the Markdown plus git commands for a manual commit.
+
+## [0.2.0] - 2026-07-04
+
+### Added
+
+- `adr:make` command: terminal-first record authoring with `--status`,
+  `--author` and repeatable `--supersedes` options. Assigns the next id,
+  honors the authoring environment gate and prints the git commands to commit
+  the new record.
+- `adr:lint` now fails on one-sided supersede relations (`relation` rule):
+  every "A supersedes B" must be reciprocal. Repositories with legacy
+  one-sided links need a one-time repair.
+
+### Changed
+
+- Supersede relations are engine-managed everywhere (see ADR 0006): the
+  Livewire dashboard and the published Vue/React starter controllers now
+  route supersede changes through the new `SupersedeSynchronizer`. Removing a
+  record's last superseder reverts it to `accepted` by convention.
+- `supersede()` is now part of the `AdrRepository` contract. Custom
+  repository implementations must add the method.
+
 ## [0.1.0] - 2026-07-04
 
 ### Added
@@ -31,5 +59,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   published as application code).
 - Supports PHP 8.3+, Laravel 12 and 13, Livewire 3.5+ and 4.
 
-[Unreleased]: https://github.com/fanmade/laravel-adr-manager/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/fanmade/laravel-adr-manager/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/fanmade/laravel-adr-manager/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/fanmade/laravel-adr-manager/releases/tag/v0.1.0

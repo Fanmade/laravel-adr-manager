@@ -6,13 +6,20 @@ namespace Fanmade\AdrManager\Mcp;
 
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Data\AdrDto;
+use Fanmade\AdrManager\Services\SupersedeSynchronizer;
+use Fanmade\AdrManager\Support\CommitInstructions;
+use Fanmade\AdrManager\Support\Environment;
+use Fanmade\AdrManager\Support\Statuses;
 use stdClass;
 use Throwable;
 
 /**
  * Transport-agnostic Model Context Protocol server. It processes a single
  * decoded JSON-RPC request and returns the response array (or null for
- * notifications), exposing the ADR store as read-only MCP tools.
+ * notifications), exposing the ADR store as MCP tools. Reads always come from
+ * the file source of truth; the single write tool (`create_adr`) only
+ * persists in the configured authoring environments and otherwise returns the
+ * Markdown and git commands to commit the record manually.
  */
 final class McpServer
 {
@@ -22,7 +29,11 @@ final class McpServer
 
     private const string SERVER_VERSION = '0.1.0';
 
-    public function __construct(private readonly AdrRepository $repository) {}
+    public function __construct(
+        private readonly AdrRepository $repository,
+        private readonly SupersedeSynchronizer $synchronizer,
+        private readonly CommitInstructions $instructions,
+    ) {}
 
     /**
      * @param  array<array-key, mixed>  $request
@@ -101,6 +112,33 @@ final class McpServer
                         'required' => ['id'],
                     ],
                 ],
+                [
+                    'name' => 'search_adrs',
+                    'description' => 'Search records by a case-insensitive substring of the title or section content.',
+                    'inputSchema' => [
+                        'type' => 'object',
+                        'properties' => ['query' => ['type' => 'string', 'description' => 'The search term.']],
+                        'required' => ['query'],
+                    ],
+                ],
+                [
+                    'name' => 'create_adr',
+                    'description' => 'Create a new ADR. Persists only in the configured authoring environments; '
+                        .'elsewhere it returns the Markdown and git commands to commit the record manually.',
+                    'inputSchema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'title' => ['type' => 'string', 'description' => 'The decision title.'],
+                            'status' => ['type' => 'string', 'description' => 'One of the configured statuses (default "proposed").'],
+                            'context' => ['type' => 'string'],
+                            'decision' => ['type' => 'string'],
+                            'consequences' => ['type' => 'string'],
+                            'author' => ['type' => 'string'],
+                            'supersedes' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'Ids of records this decision supersedes.'],
+                        ],
+                        'required' => ['title'],
+                    ],
+                ],
             ],
         ];
     }
@@ -122,6 +160,8 @@ final class McpServer
         return match ($name) {
             'list_adrs' => $this->listAdrsTool(),
             'get_adr_context' => $this->getAdrContextTool($arguments),
+            'search_adrs' => $this->searchAdrsTool($arguments),
+            'create_adr' => $this->createAdrTool($arguments),
             default => throw McpException::invalidParams("Unknown tool: {$name}"),
         };
     }
@@ -163,6 +203,111 @@ final class McpServer
         }
 
         return $this->textContent($this->encode($adr->toArray()));
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function searchAdrsTool(array $arguments): array
+    {
+        $query = $arguments['query'] ?? null;
+
+        if (! is_string($query) || trim($query) === '') {
+            throw McpException::invalidParams('Missing argument: query.');
+        }
+
+        $needle = mb_strtolower(trim($query));
+
+        $items = $this->repository->all()
+            ->filter(fn (AdrDto $adr): bool => str_contains(
+                mb_strtolower($adr->title.' '.$adr->context.' '.$adr->decision.' '.$adr->consequences),
+                $needle,
+            ))
+            ->map(fn (AdrDto $adr): array => [
+                'id' => $adr->id,
+                'title' => $adr->title,
+                'status' => $adr->status,
+                'date' => $adr->date->toDateString(),
+            ])
+            ->values()
+            ->all();
+
+        return $this->textContent($this->encode($items));
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $arguments
+     * @return array<string, mixed>
+     */
+    private function createAdrTool(array $arguments): array
+    {
+        $title = $arguments['title'] ?? null;
+        $title = is_string($title) ? trim($title) : '';
+
+        if ($title === '') {
+            throw McpException::invalidParams('Missing argument: title.');
+        }
+
+        $status = $arguments['status'] ?? 'proposed';
+
+        if (! is_string($status) || ! in_array($status, Statuses::allowed(), true)) {
+            throw McpException::invalidParams('Invalid status. Allowed: '.implode(', ', Statuses::allowed()).'.');
+        }
+
+        $supersedes = [];
+
+        foreach (is_array($arguments['supersedes'] ?? null) ? $arguments['supersedes'] : [] as $target) {
+            if (! is_string($target)) {
+                continue;
+            }
+
+            if ($this->repository->find($target) === null) {
+                throw McpException::invalidParams("Cannot supersede unknown ADR [{$target}].");
+            }
+
+            $supersedes[] = $target;
+        }
+
+        $id = str_pad((string) ($this->repository->getLatestSequence() + 1), 4, '0', STR_PAD_LEFT);
+
+        $draft = AdrDto::fromArray([
+            'id' => $id,
+            'title' => $title,
+            'status' => $status,
+            'context' => $this->optionalString($arguments, 'context'),
+            'decision' => $this->optionalString($arguments, 'decision'),
+            'consequences' => $this->optionalString($arguments, 'consequences'),
+            'author' => $this->optionalString($arguments, 'author'),
+            'supersedes' => $supersedes,
+        ]);
+
+        if (! Environment::authoringAllowed()) {
+            return $this->textContent($this->encode([
+                'persisted' => false,
+                'reason' => 'Authoring is disabled in this environment; commit the record manually.',
+                ...$this->instructions->for($draft),
+            ]));
+        }
+
+        $this->repository->save($draft);
+        $this->synchronizer->apply($this->repository, null, $draft);
+
+        return $this->textContent($this->encode([
+            'persisted' => true,
+            'id' => $id,
+            'path' => $this->instructions->for($draft)['path'],
+        ]));
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $arguments
+     */
+    private function optionalString(array $arguments, string $key): string
+    {
+        $value = $arguments[$key] ?? '';
+
+        return is_string($value) ? $value : '';
     }
 
     /**
