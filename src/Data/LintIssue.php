@@ -16,6 +16,8 @@ final class LintIssue
 
     public const string LINK = 'link';
 
+    public const string RELATION = 'relation';
+
     public const string SEQUENCE = 'sequence';
 
     public const string DUPLICATE = 'duplicate';

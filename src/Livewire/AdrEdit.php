@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fanmade\AdrManager\Livewire;
 
 use Fanmade\AdrManager\Contracts\AdrRepository;
+use Fanmade\AdrManager\Services\SupersedeSynchronizer;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 
@@ -38,7 +39,10 @@ final class AdrEdit extends AdrForm
 
         $this->validate($this->validationRules());
 
-        $repository->save($this->draft($this->id));
+        $before = $repository->find($this->id);
+        $draft = $this->draft($this->id);
+        $repository->save($draft);
+        app(SupersedeSynchronizer::class)->apply($repository, $before, $draft);
 
         session()->flash('adr-status', "Updated ADR-{$this->id}.");
 

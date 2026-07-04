@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Adr;
 
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Data\AdrDto;
+use Fanmade\AdrManager\Services\SupersedeSynchronizer;
 use Fanmade\AdrManager\Support\CommitInstructions;
 use Fanmade\AdrManager\Support\Environment;
 use Illuminate\Http\RedirectResponse;
@@ -72,6 +73,7 @@ class AdrController
         }
 
         $repository->save($draft);
+        app(SupersedeSynchronizer::class)->apply($repository, null, $draft);
 
         return redirect("/adr/{$draft->id}");
     }
@@ -91,7 +93,9 @@ class AdrController
 
     public function update(Request $request, AdrRepository $repository, string $id): Response|RedirectResponse
     {
-        abort_if($repository->find($id) === null, 404);
+        $before = $repository->find($id);
+
+        abort_if($before === null, 404);
 
         $draft = $this->draft($request, $id);
 
@@ -105,6 +109,7 @@ class AdrController
         }
 
         $repository->save($draft);
+        app(SupersedeSynchronizer::class)->apply($repository, $before, $draft);
 
         return redirect("/adr/{$id}");
     }

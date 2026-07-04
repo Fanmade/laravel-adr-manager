@@ -74,6 +74,40 @@ it('creates a record and redirects when writing is allowed', function () {
     expect(repo()->find('0001')?->title)->toBe('Choose a queue driver');
 });
 
+it('supersedes reciprocally when creating through the dashboard', function () {
+    $this->app['env'] = 'local';
+    repo()->save(record('0001', 'Old decision', 'accepted'));
+
+    Livewire::test(AdrCreate::class)
+        ->set('title', 'New direction')
+        ->set('supersedes', ['0001'])
+        ->call('save');
+
+    $old = repo()->find('0001');
+
+    expect($old->status)->toBe('superseded')
+        ->and($old->backlinks)->toContain('0002');
+});
+
+it('releases a supersede link removed through the edit form', function () {
+    $this->app['env'] = 'local';
+    repo()->save(record('0001', 'Old decision', 'accepted'));
+
+    Livewire::test(AdrCreate::class)
+        ->set('title', 'New direction')
+        ->set('supersedes', ['0001'])
+        ->call('save');
+
+    Livewire::test(AdrEdit::class, ['id' => '0002'])
+        ->call('removeSupersede', '0001')
+        ->call('save');
+
+    $old = repo()->find('0001');
+
+    expect($old->status)->toBe('accepted')
+        ->and($old->backlinks)->not->toContain('0002');
+});
+
 it('validates the title before creating', function () {
     $this->app['env'] = 'local';
 

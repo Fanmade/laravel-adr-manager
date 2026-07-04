@@ -36,6 +36,25 @@ it('fails when a record uses a status outside the allowed set', function () {
         ->assertFailed();
 });
 
+it('fails when a supersede link is one-sided', function () {
+    $repo = app(AdrRepository::class);
+    $repo->save(record('0001', 'First', 'accepted'));
+    $repo->save(record('0002', 'Second', 'accepted', ['0001']));
+
+    $this->artisan('adr:lint')
+        ->expectsOutputToContain('not marked as superseded')
+        ->assertFailed();
+});
+
+it('passes reciprocal supersede links', function () {
+    $repo = app(AdrRepository::class);
+    $repo->save(record('0001', 'First', 'accepted'));
+    $repo->save(record('0002', 'Second', 'accepted'));
+    $repo->supersede('0001', '0002');
+
+    $this->artisan('adr:lint')->assertSuccessful();
+});
+
 it('fails when a record links to a non-existent record', function () {
     app(AdrRepository::class)->save(record('0001', 'First', 'accepted', ['9999']));
 

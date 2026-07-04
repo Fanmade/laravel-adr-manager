@@ -81,7 +81,7 @@ Two conventions keep parsing unambiguous:
 | --- | --- |
 | `adr:make` | Create the next record from the terminal. Options: `--status`, `--author`, `--supersedes=*` (reciprocal linking). Prints the git commands to commit it. |
 | `adr:sync` | Reconcile the database index with the files on disk. |
-| `adr:lint` | Validate format, statuses, links and sequence integrity. Exits non-zero on any issue. |
+| `adr:lint` | Validate format, statuses, links, reciprocal supersedes and sequence integrity. Exits non-zero on any issue. |
 | `adr:changelog` | Compile a Markdown changelog. Options: `--from`, `--to`, `--output`. |
 | `adr:install` | Publish a frontend starter stack (`livewire`, `vue`, `react`). |
 

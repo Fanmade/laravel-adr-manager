@@ -69,6 +69,7 @@ final class AdrLinter
         return [
             ...$issues,
             ...$this->brokenLinks($records, $paths),
+            ...$this->oneSidedSupersedes($records, $paths),
             ...$this->sequenceGaps($records),
         ];
     }
@@ -111,6 +112,39 @@ final class AdrLinter
                         $paths[$id],
                         LintIssue::LINK,
                         "ADR [{$id}] references unknown record [{$reference}].",
+                    );
+                }
+            }
+        }
+
+        return $issues;
+    }
+
+    /**
+     * Every "A supersedes B" must be reciprocal: B carries a backlink to A
+     * and the `superseded` status (see ADR 0006).
+     *
+     * @param  array<string, AdrDto>  $records
+     * @param  array<string, string>  $paths
+     * @return list<LintIssue>
+     */
+    private function oneSidedSupersedes(array $records, array $paths): array
+    {
+        $issues = [];
+
+        foreach ($records as $id => $dto) {
+            foreach ($dto->supersedes as $target) {
+                if (! array_key_exists($target, $records)) {
+                    continue; // Already reported as a broken link.
+                }
+
+                $targetDto = $records[$target];
+
+                if ($targetDto->status !== 'superseded' || ! in_array($id, $targetDto->backlinks, true)) {
+                    $issues[] = new LintIssue(
+                        $paths[$target],
+                        LintIssue::RELATION,
+                        "ADR [{$target}] is superseded by [{$id}] but is not marked as superseded with a backlink.",
                     );
                 }
             }
