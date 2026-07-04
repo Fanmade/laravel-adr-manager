@@ -7,6 +7,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-04
+
 ### Added
 
 - MCP tools `search_adrs` (case-insensitive substring search over titles and
@@ -16,10 +18,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Relation graph view at `GET /adr/graph`: server-rendered SVG of the
   supersede graph (git-log style), reading the `adr:sync`ed index per
   ADR 0003, with linked nodes and a hint when the index is empty.
-
-## [0.2.0] - 2026-07-04
-
-### Added
 
 - `adr:make` command: terminal-first record authoring with `--status`,
   `--author` and repeatable `--supersedes` options. Assigns the next id,
