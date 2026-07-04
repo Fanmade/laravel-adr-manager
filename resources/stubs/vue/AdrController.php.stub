@@ -6,12 +6,26 @@ namespace App\Http\Controllers\Adr;
 
 use Fanmade\AdrManager\Contracts\AdrRepository;
 use Fanmade\AdrManager\Data\AdrDto;
+use Fanmade\AdrManager\Support\CommitInstructions;
+use Fanmade\AdrManager\Support\Environment;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
  * Starter Inertia controller. It depends only on the AdrRepository contract,
  * never a concrete storage class.
+ *
+ * Example routes:
+ *
+ *     Route::get('/adr', [AdrController::class, 'index']);
+ *     Route::get('/adr/create', [AdrController::class, 'create']);
+ *     Route::post('/adr', [AdrController::class, 'store']);
+ *     Route::get('/adr/{id}', [AdrController::class, 'show']);
+ *     Route::get('/adr/{id}/edit', [AdrController::class, 'edit']);
+ *     Route::put('/adr/{id}', [AdrController::class, 'update']);
  */
 class AdrController
 {
@@ -33,5 +47,103 @@ class AdrController
         return Inertia::render('Adr/Show', [
             'record' => $adr->toArray(),
         ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Adr/Create', [
+            'statuses' => $this->statuses(),
+            'canPersist' => Environment::authoringAllowed(),
+        ]);
+    }
+
+    public function store(Request $request, AdrRepository $repository): Response|RedirectResponse
+    {
+        $draft = $this->draft($request, $this->nextId($repository));
+
+        if (! Environment::authoringAllowed()) {
+            // Writing is disabled here: hand back the Markdown and git
+            // commands to commit the record manually instead of persisting.
+            return Inertia::render('Adr/Create', [
+                'statuses' => $this->statuses(),
+                'canPersist' => false,
+                'instructions' => app(CommitInstructions::class)->for($draft),
+            ]);
+        }
+
+        $repository->save($draft);
+
+        return redirect("/adr/{$draft->id}");
+    }
+
+    public function edit(AdrRepository $repository, string $id): Response
+    {
+        $adr = $repository->find($id);
+
+        abort_if($adr === null, 404);
+
+        return Inertia::render('Adr/Edit', [
+            'record' => $adr->toArray(),
+            'statuses' => $this->statuses(),
+            'canPersist' => Environment::authoringAllowed(),
+        ]);
+    }
+
+    public function update(Request $request, AdrRepository $repository, string $id): Response|RedirectResponse
+    {
+        abort_if($repository->find($id) === null, 404);
+
+        $draft = $this->draft($request, $id);
+
+        if (! Environment::authoringAllowed()) {
+            return Inertia::render('Adr/Edit', [
+                'record' => $draft->toArray(),
+                'statuses' => $this->statuses(),
+                'canPersist' => false,
+                'instructions' => app(CommitInstructions::class)->for($draft),
+            ]);
+        }
+
+        $repository->save($draft);
+
+        return redirect("/adr/{$id}");
+    }
+
+    private function draft(Request $request, string $id): AdrDto
+    {
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'status' => ['required', Rule::in($this->statuses())],
+            'context' => ['nullable', 'string'],
+            'decision' => ['nullable', 'string'],
+            'consequences' => ['nullable', 'string'],
+            'supersedes' => ['array'],
+            'supersedes.*' => ['string'],
+        ]);
+
+        return AdrDto::fromArray([
+            'id' => $id,
+            'title' => $validated['title'],
+            'status' => $validated['status'],
+            'context' => $validated['context'] ?? '',
+            'decision' => $validated['decision'] ?? '',
+            'consequences' => $validated['consequences'] ?? '',
+            'supersedes' => $validated['supersedes'] ?? [],
+        ]);
+    }
+
+    private function nextId(AdrRepository $repository): string
+    {
+        return str_pad((string) ($repository->getLatestSequence() + 1), 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function statuses(): array
+    {
+        $statuses = config('adr-manager.statuses', []);
+
+        return is_array($statuses) ? array_values(array_filter($statuses, 'is_string')) : [];
     }
 }

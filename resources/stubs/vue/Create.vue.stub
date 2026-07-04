@@ -1,0 +1,49 @@
+<script setup>
+import { Link, useForm } from '@inertiajs/vue3'
+import AdrForm from './Form.vue'
+import CommitInstructions from './CommitInstructions.vue'
+
+defineProps({
+  statuses: {
+    type: Array,
+    required: true,
+  },
+  canPersist: {
+    type: Boolean,
+    required: true,
+  },
+  instructions: {
+    type: Object,
+    default: null,
+  },
+})
+
+const form = useForm({
+  title: '',
+  status: 'proposed',
+  context: '',
+  decision: '',
+  consequences: '',
+  supersedes: [],
+})
+
+const submit = () => form.post('/adr')
+</script>
+
+<template>
+  <div class="mx-auto max-w-3xl space-y-6 p-6">
+    <div class="flex items-center gap-3">
+      <Link href="/adr" class="text-sm text-gray-500 hover:underline">&larr; All records</Link>
+      <h1 class="text-xl font-semibold">New ADR</h1>
+    </div>
+
+    <form class="space-y-6" @submit.prevent="submit">
+      <AdrForm :form="form" :statuses="statuses" />
+      <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-white">
+        {{ canPersist ? 'Create record' : 'Preview commit instructions' }}
+      </button>
+    </form>
+
+    <CommitInstructions v-if="instructions" :instructions="instructions" />
+  </div>
+</template>

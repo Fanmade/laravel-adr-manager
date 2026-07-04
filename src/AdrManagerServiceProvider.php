@@ -160,6 +160,10 @@ final class AdrManagerServiceProvider extends ServiceProvider
                 [$stubs.'/vue/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],
                 [$stubs.'/vue/Index.vue.stub', $app->resourcePath('js/Pages/Adr/Index.vue')],
                 [$stubs.'/vue/Show.vue.stub', $app->resourcePath('js/Pages/Adr/Show.vue')],
+                [$stubs.'/vue/Create.vue.stub', $app->resourcePath('js/Pages/Adr/Create.vue')],
+                [$stubs.'/vue/Edit.vue.stub', $app->resourcePath('js/Pages/Adr/Edit.vue')],
+                [$stubs.'/vue/Form.vue.stub', $app->resourcePath('js/Pages/Adr/Form.vue')],
+                [$stubs.'/vue/CommitInstructions.vue.stub', $app->resourcePath('js/Pages/Adr/CommitInstructions.vue')],
             ],
             'react' => [
                 [$stubs.'/react/AdrController.php.stub', $app->basePath('app/Http/Controllers/Adr/AdrController.php')],

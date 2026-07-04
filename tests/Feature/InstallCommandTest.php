@@ -24,7 +24,22 @@ it('installs the vue starter stack', function () {
 
     expect(file_exists(resource_path('js/Pages/Adr/Index.vue')))->toBeTrue()
         ->and(file_exists(resource_path('js/Pages/Adr/Show.vue')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Create.vue')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Edit.vue')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/Form.vue')))->toBeTrue()
+        ->and(file_exists(resource_path('js/Pages/Adr/CommitInstructions.vue')))->toBeTrue()
         ->and(file_exists(app_path('Http/Controllers/Adr/AdrController.php')))->toBeTrue();
+});
+
+it('publishes a vue controller that talks only to the repository contract', function () {
+    $this->artisan('adr:install', ['stack' => 'vue'])->assertSuccessful();
+
+    $controller = file_get_contents(app_path('Http/Controllers/Adr/AdrController.php'));
+
+    expect($controller)->toContain('AdrRepository')
+        ->not->toContain('LocalMarkdownRepository')
+        ->toContain('public function store(')
+        ->toContain('public function update(');
 });
 
 it('installs the react starter stack', function () {

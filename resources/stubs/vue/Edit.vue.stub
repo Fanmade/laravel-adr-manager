@@ -1,0 +1,53 @@
+<script setup>
+import { Link, useForm } from '@inertiajs/vue3'
+import AdrForm from './Form.vue'
+import CommitInstructions from './CommitInstructions.vue'
+
+const props = defineProps({
+  record: {
+    type: Object,
+    required: true,
+  },
+  statuses: {
+    type: Array,
+    required: true,
+  },
+  canPersist: {
+    type: Boolean,
+    required: true,
+  },
+  instructions: {
+    type: Object,
+    default: null,
+  },
+})
+
+const form = useForm({
+  title: props.record.title,
+  status: props.record.status,
+  context: props.record.context,
+  decision: props.record.decision,
+  consequences: props.record.consequences,
+  supersedes: [...(props.record.supersedes ?? [])],
+})
+
+const submit = () => form.put(`/adr/${props.record.id}`)
+</script>
+
+<template>
+  <div class="mx-auto max-w-3xl space-y-6 p-6">
+    <div class="flex items-center gap-3">
+      <Link :href="`/adr/${record.id}`" class="text-sm text-gray-500 hover:underline">&larr; ADR-{{ record.id }}</Link>
+      <h1 class="text-xl font-semibold">Edit ADR-{{ record.id }}</h1>
+    </div>
+
+    <form class="space-y-6" @submit.prevent="submit">
+      <AdrForm :form="form" :statuses="statuses" />
+      <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-white">
+        {{ canPersist ? 'Save changes' : 'Preview commit instructions' }}
+      </button>
+    </form>
+
+    <CommitInstructions v-if="instructions" :instructions="instructions" />
+  </div>
+</template>

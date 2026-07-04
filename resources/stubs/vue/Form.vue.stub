@@ -1,0 +1,69 @@
+<script setup>
+import { ref } from 'vue'
+
+const props = defineProps({
+  form: {
+    type: Object,
+    required: true,
+  },
+  statuses: {
+    type: Array,
+    required: true,
+  },
+})
+
+const supersedeInput = ref('')
+
+const addSupersede = () => {
+  const id = supersedeInput.value.trim()
+  if (id && !props.form.supersedes.includes(id)) props.form.supersedes.push(id)
+  supersedeInput.value = ''
+}
+
+const removeSupersede = (id) => {
+  props.form.supersedes = props.form.supersedes.filter((existing) => existing !== id)
+}
+</script>
+
+<template>
+  <div class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium">Title</label>
+      <input v-model="form.title" type="text" class="w-full rounded border px-3 py-2">
+      <p v-if="form.errors.title" class="mt-1 text-sm text-red-600">{{ form.errors.title }}</p>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Status</label>
+      <select v-model="form.status" class="w-full rounded border px-3 py-2">
+        <option v-for="option in statuses" :key="option" :value="option">{{ option }}</option>
+      </select>
+      <p v-if="form.errors.status" class="mt-1 text-sm text-red-600">{{ form.errors.status }}</p>
+    </div>
+
+    <div v-for="[field, label] in [['context', 'Context'], ['decision', 'Decision'], ['consequences', 'Consequences']]" :key="field">
+      <label class="block text-sm font-medium">{{ label }}</label>
+      <textarea v-model="form[field]" rows="4" class="w-full rounded border px-3 py-2 font-mono text-sm"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium">Supersedes</label>
+      <div class="flex gap-2">
+        <input
+          v-model="supersedeInput"
+          type="text"
+          placeholder="e.g. 0002"
+          class="flex-1 rounded border px-3 py-2"
+          @keydown.enter.prevent="addSupersede"
+        >
+        <button type="button" class="rounded border px-3" @click="addSupersede">Add</button>
+      </div>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        <li v-for="id in form.supersedes" :key="id" class="flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-sm">
+          ADR-{{ id }}
+          <button type="button" class="text-gray-500" @click="removeSupersede(id)">&times;</button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</template>
