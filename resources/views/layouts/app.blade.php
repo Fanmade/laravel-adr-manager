@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ADR Manager</title>
+    <style>{!! \Fanmade\AdrManager\Support\Assets::css() !!}</style>
     @livewireStyles
 </head>
 <body class="bg-gray-50 text-gray-900">

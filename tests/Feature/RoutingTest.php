@@ -23,6 +23,14 @@ it('serves the dashboard in the local environment', function () {
         ->assertSee('Architecture Decision Records');
 });
 
+it('inlines the bundled stylesheet so the dashboard works without a host asset build', function () {
+    $this->app['env'] = 'local';
+
+    $this->get('/adr')
+        ->assertOk()
+        ->assertSee('max-w-3xl', false);
+});
+
 it('exposes a json api under the api prefix', function () {
     $this->app['env'] = 'local';
 

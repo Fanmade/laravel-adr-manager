@@ -7,7 +7,8 @@ index for fast search, a JSON control plane, and an MCP endpoint for AI agents.
 ## Requirements
 
 - PHP 8.3+
-- Laravel 11 or 12
+- Laravel 12 or 13
+- Livewire 3.5+ or 4 (optional, for the built-in dashboard)
 
 ## Installation
 
