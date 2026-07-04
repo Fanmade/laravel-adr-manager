@@ -22,12 +22,17 @@ Publish the configuration:
 php artisan vendor:publish --tag=adr-manager-config
 ```
 
-If you use the relational index (see [Sync](#index-and-sync)), publish and run
-the migrations:
+The migrations load automatically. If you use the relational index (see
+[Sync](#index-and-sync)), run them:
+
+```bash
+php artisan migrate
+```
+
+Publish them first only if you need to adapt the schema:
 
 ```bash
 php artisan vendor:publish --tag=adr-manager-migrations
-php artisan migrate
 ```
 
 ## Record format
@@ -176,6 +181,10 @@ composer test:coverage
 composer stan         # PHPStan (max) + Larastan
 composer lint         # Pint
 ```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
